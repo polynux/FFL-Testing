@@ -10,3 +10,6 @@
 	path = ffl
 	url = https://github.com/ariankordi/ffl
 	shallow = true
+[submodule "server-impl/mii-creator"]
+	path = server-impl/mii-creator
+	url = https://github.com/polynux/mii-creator

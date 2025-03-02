@@ -1,9 +1,8 @@
 package main
 
 import (
-	"bytes"
-	"time"
 	"bufio"
+	"bytes"
 	"encoding/base64"
 	"encoding/binary"
 	"encoding/hex"
@@ -16,6 +15,7 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"time"
 
 	// ApproxBiLinear for CPU SSAA
 	"golang.org/x/image/draw"
@@ -56,17 +56,17 @@ type RenderRequest struct {
 	ModelRotate     [3]int16
 	BackgroundColor [4]uint8
 
-	AAMethod             uint8 // UNUSED
-	DrawStageMode        uint8
-	VerifyCharInfo       bool
-	VerifyCRC16          bool
-	LightEnable          bool
-	ClothesColor         int8 // default: -1
-	PantsColor           int8 // ^^
-	BodyType             int8 // ^^
+	AAMethod       uint8 // UNUSED
+	DrawStageMode  uint8
+	VerifyCharInfo bool
+	VerifyCRC16    bool
+	LightEnable    bool
+	ClothesColor   int8 // default: -1
+	PantsColor     int8 // ^^
+	BodyType       int8 // ^^
 
-	HeadwearIndex        int8
-	HeadwearColor        int8
+	HeadwearIndex int8
+	HeadwearColor int8
 
 	InstanceCount        uint8
 	InstanceRotationMode uint8
@@ -86,8 +86,8 @@ func SetExpressionFlagIndex(ef *FFLAllExpressionFlag, index int, set bool) {
 		return // Do not set anything.
 	}
 
-	part := index / 32       // Determine which 32-bit block
-	bitIndex := index % 32   // Determine which bit within the block
+	part := index / 32     // Determine which 32-bit block
+	bitIndex := index % 32 // Determine which bit within the block
 
 	if set {
 		ef.Flags[part] |= (1 << bitIndex) // Set the bit
@@ -168,7 +168,7 @@ func main() {
 	flag.StringVar(&certFile, "cert", "", "TLS certificate file")
 	flag.StringVar(&keyFile, "key", "", "TLS key file")
 
-	flag.StringVar(&assetsDir, "assets-dir", "", "If you set this, files from here will be served at root.")
+	flag.StringVar(&assetsDir, "assets-dir", "mii-creator/public", "If you set this, files from here will be served at root.")
 
 	flag.StringVar(&mysqlConnStr, "mysql", "", "MySQL connection string for NNID fetch")
 	flag.StringVar(&upstreamAddr, "upstream", "localhost:12346", "Upstream TCP server address")
@@ -191,15 +191,7 @@ func main() {
 
 	imagePngEndpoint := "/miis/image.png"
 
-	if assetsDir != "" {
-		http.Handle("/", http.FileServer(http.Dir(assetsDir)))
-	} else {
-		// handler that just tells you where the real endpoint is
-		http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-			w.WriteHeader(http.StatusNotFound)
-			fmt.Fprintln(w, "you are probably looking for "+imagePngEndpoint)
-		})
-	}
+	http.Handle("/", http.FileServer(http.Dir(assetsDir)))
 
 	http.HandleFunc(imagePngEndpoint, renderImage)
 	http.HandleFunc("/miis/image.glb", renderImage)
@@ -642,7 +634,6 @@ func renderImage(ow http.ResponseWriter, r *http.Request) {
 		pantsColorStr = "default"
 	}
 
-
 	headwearIndexStr := query.Get("headwearIndex")
 	if headwearIndexStr == "" {
 		headwearIndexStr = "-1"
@@ -1008,7 +999,6 @@ func renderImage(ow http.ResponseWriter, r *http.Request) {
 
 	bgColor4u8 := [4]uint8{bgColor.R, bgColor.G, bgColor.B, bgColor.A}
 
-
 	shaderType, err := strconv.Atoi(shaderTypeStr)
 	if err != nil {
 		shaderType = getMapToInt(shaderTypeStr, shaderTypeMap, 0)
@@ -1020,33 +1010,33 @@ func renderImage(ow http.ResponseWriter, r *http.Request) {
 
 	// Creating the render request
 	renderRequest := RenderRequest{
-		Data:            [96]byte{},
-		DataLength:      uint16(len(storeData)),
-		ModelFlag:       uint8(modelFlag),
-		ResponseFormat:  responseFormat,
-		Resolution:      uint16(width),
-		TexResolution:   int16(texResolution),
-		ViewType:        uint8(viewType),
-		ResourceType:    int8(resourceType),
-		ShaderType:      uint8(shaderType),
-		Expression:      uint8(expression),
-		ExpressionFlag:  expressionFlag,
-		CameraRotate:    cameraRotateVec3i,
-		ModelRotate:     modelRotateVec3i,
-		BackgroundColor: bgColor4u8,
-		DrawStageMode:   uint8(drawStageMode),
-		VerifyCharInfo:  verifyCharInfo,
-		VerifyCRC16:     verifyCRC16,
-		LightEnable:     lightEnable,
-		ClothesColor:    int8(clothesColor),
-		PantsColor:      int8(pantsColor),
-		BodyType:        int8(bodyType),
-		HeadwearIndex:   int8(headwearIndex),
-		HeadwearColor:   int8(headwearColor),
-		InstanceCount:   uint8(instanceCount),
+		Data:                 [96]byte{},
+		DataLength:           uint16(len(storeData)),
+		ModelFlag:            uint8(modelFlag),
+		ResponseFormat:       responseFormat,
+		Resolution:           uint16(width),
+		TexResolution:        int16(texResolution),
+		ViewType:             uint8(viewType),
+		ResourceType:         int8(resourceType),
+		ShaderType:           uint8(shaderType),
+		Expression:           uint8(expression),
+		ExpressionFlag:       expressionFlag,
+		CameraRotate:         cameraRotateVec3i,
+		ModelRotate:          modelRotateVec3i,
+		BackgroundColor:      bgColor4u8,
+		DrawStageMode:        uint8(drawStageMode),
+		VerifyCharInfo:       verifyCharInfo,
+		VerifyCRC16:          verifyCRC16,
+		LightEnable:          lightEnable,
+		ClothesColor:         int8(clothesColor),
+		PantsColor:           int8(pantsColor),
+		BodyType:             int8(bodyType),
+		HeadwearIndex:        int8(headwearIndex),
+		HeadwearColor:        int8(headwearColor),
+		InstanceCount:        uint8(instanceCount),
 		InstanceRotationMode: 0, // TODO
-		LightDirection:  lightDirectionVec3i,
-		SplitMode:       uint8(splitMode),
+		LightDirection:       lightDirectionVec3i,
+		SplitMode:            uint8(splitMode),
 	}
 
 	// Enabling mipmap if specified
@@ -1159,7 +1149,7 @@ func renderImage(ow http.ResponseWriter, r *http.Request) {
 
 		// size is deterministic so set it
 		imageDataSize := int(img.Rect.Dx()) * int(img.Rect.Dy()) * 4 // NRGBA
-		size := imageDataSize + 18 // tga header size
+		size := imageDataSize + 18                                   // tga header size
 		header.Set("Content-Length", strconv.Itoa(size))
 		header.Set("Content-Type", "image/tga")
 
